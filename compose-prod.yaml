@@ -1,0 +1,54 @@
+services:
+
+  nginx:
+    image: ${COMPOSE_PROJECT_NAME}-nginx:latest
+    build:
+      context: ./.docker/nginx
+      args:
+        BUILD_ARGUMENT_ENV: prod
+      dockerfile: Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME}-nginx
+    restart: always
+    volumes:
+      - ./src:/var/www/html:ro,cached
+    depends_on:
+      - ternasys
+    networks:
+      - app
+      - nginx-proxy_network
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  ternasys:
+    image: ${COMPOSE_PROJECT_NAME}-app:latest
+    user: "www-data"
+    build:
+      context: .
+      args:
+        BUILD_ARGUMENT_ENV: prod
+        HOST_UID: ${HOST_UID}
+        HOST_GID: ${HOST_GID}
+      dockerfile: ./.docker/php/Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME}-app
+    restart: always
+    volumes:
+      - ./src:/var/www/html
+    networks:
+      - app
+      - nginx-proxy_network
+    healthcheck:
+      test: ["CMD", "php-fpm", "-t"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  app:
+    name: ${COMPOSE_PROJECT_NAME}_network
+  nginx-proxy_network:
+    external: true

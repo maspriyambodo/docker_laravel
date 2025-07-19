@@ -1,0 +1,17 @@
+/.git*
+/.idea/workspace.xml
+.dockerignore
+storage/mysql-data
+vendor/
+bootstrap/cache
+!bootstrap/cache/.gitignore
+.phpstorm.meta.php
+_ide_helper.php
+/tools/*/vendor/
+.phpunit.cache
+.phpunit.result.cache
+Dockerfile
+compose.yaml
+compose-test-ci.yaml
+compose-staging.yaml
+compose-prod.yaml

@@ -1,0 +1,51 @@
+services:
+
+  nginx:
+    image: ${COMPOSE_PROJECT_NAME}-nginx:latest
+    build:
+      context: ./.docker/nginx
+      args:
+        BUILD_ARGUMENT_ENV: dev
+      dockerfile: Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME}-nginx
+    restart: always
+    ports:
+      - "${WEB_PORT_HTTP}:80"
+      - "${WEB_PORT_SSL}:443"
+    volumes:
+      - ./src:/var/www/html:ro,cached
+    depends_on:
+      - tarakan_mi
+    networks:
+      - app
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  tarakan_mi:
+    image: ${COMPOSE_PROJECT_NAME}-app:latest
+    user: "www-data"
+    build:
+      context: .
+      args:
+        BUILD_ARGUMENT_ENV: dev
+        HOST_UID: ${HOST_UID}
+        HOST_GID: ${HOST_GID}
+      dockerfile: ./.docker/php/Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME}-app
+    restart: always
+    volumes:
+      - ./src:/var/www/html
+    networks:
+      - app
+    healthcheck:
+      test: ["CMD", "php-fpm", "-t"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  app:
+    name: ${COMPOSE_PROJECT_NAME}_network
